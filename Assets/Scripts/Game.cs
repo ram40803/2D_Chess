@@ -76,10 +76,6 @@ public class Game : MonoBehaviour
         {
             ChakeInput();
         }
-        else
-        {
-            print("gameOver");
-        }
     }
 
     private void ChakeInput()
@@ -93,14 +89,6 @@ public class Game : MonoBehaviour
 
             if (box != null)
             {
-                if (boardMatrix[box.x, box.y])
-                {
-                    //print(Game.boardMatrix[box.x, box.y].CanMove());
-                }
-
-                print(whitePieces.Count + " " + blackPieces.Count);
-
-
                 activePlate.transform.position = GetBoxPos(box);
                 activePlate.SetActive(true);
 
@@ -143,8 +131,6 @@ public class Game : MonoBehaviour
                                 activePiece,
                                 Move.gameMoves.Peek().piece
                             );
-
-                        enPassantCandidate = null;
                     }
 
                     if (castlingCandidate[0] != null && castlingCandidate[0].x == box.x && castlingCandidate[0].y == box.y ||
@@ -162,7 +148,7 @@ public class Game : MonoBehaviour
                     castlingCandidate[0] = null;
                     castlingCandidate[1] = null;
 
-                    candidateBoxes.Clear();
+                    
                 }
                 else
                 {
@@ -238,21 +224,21 @@ public class Game : MonoBehaviour
     
 
     // this method find all cnadidate box on chess board for active piece
-    private void FindCandidateBox(Pieces p)
+    public int FindCandidateBox(Pieces p)
     {
         int x = p.box.x, y = p.box.y;
 
         switch (p.tag)
         {
             case "King":
-                AddToCandidate(x + 1, y + 1);
-                AddToCandidate(x, y + 1);
-                AddToCandidate(x - 1, y + 1);
-                AddToCandidate(x + 1, y);
-                AddToCandidate(x - 1, y);
-                AddToCandidate(x + 1, y - 1);
-                AddToCandidate(x, y - 1);
-                AddToCandidate(x - 1, y - 1);
+                AddToCandidate(p, x + 1, y + 1);
+                AddToCandidate(p, x, y + 1);
+                AddToCandidate(p, x - 1, y + 1);
+                AddToCandidate(p, x + 1, y);
+                AddToCandidate(p, x - 1, y);
+                AddToCandidate(p, x + 1, y - 1);
+                AddToCandidate(p, x, y - 1);
+                AddToCandidate(p, x - 1, y - 1);
 
                 int t = p.player == Game.whitePlayer ? 0 : 1;
 
@@ -272,72 +258,74 @@ public class Game : MonoBehaviour
                 break;
 
             case "Queen":
-                FindInLine(1, 1, p.box);
-                FindInLine(-1, -1, p.box);
-                FindInLine(1, -1, p.box);
-                FindInLine(-1, 1, p.box);
-                FindInLine(0, 1, p.box);
-                FindInLine(0, -1, p.box);
-                FindInLine(1, 0, p.box);
-                FindInLine(-1, 0, p.box);
+                FindInLine(p, 1, 1, p.box);
+                FindInLine(p, -1, -1, p.box);
+                FindInLine(p, 1, -1, p.box);
+                FindInLine(p, -1, 1, p.box);
+                FindInLine(p, 0, 1, p.box);
+                FindInLine(p, 0, -1, p.box);
+                FindInLine(p, 1, 0, p.box);
+                FindInLine(p, -1, 0, p.box);
                 break;
 
             case "Rook":
-                FindInLine(0, 1, p.box);
-                FindInLine(0, -1, p.box);
-                FindInLine(1, 0, p.box);
-                FindInLine(-1, 0, p.box);
+                FindInLine(p, 0, 1, p.box);
+                FindInLine(p, 0, -1, p.box);
+                FindInLine(p, 1, 0, p.box);
+                FindInLine(p, -1, 0, p.box);
                 break;
 
             case "Bishop":
-                FindInLine(1, 1, p.box);
-                FindInLine(-1, -1, p.box);
-                FindInLine(1, -1, p.box);
-                FindInLine(-1, 1, p.box);
+                FindInLine(p, 1, 1, p.box);
+                FindInLine(p, -1, -1, p.box);
+                FindInLine(p, 1, -1, p.box);
+                FindInLine(p, -1, 1, p.box);
                 break;
 
             case "Knight":
-                AddToCandidate(x + 1, y + 2);
-                AddToCandidate(x - 1, y + 2);
-                AddToCandidate(x + 2, y + 1);
-                AddToCandidate(x - 2, y + 1);
-                AddToCandidate(x + 2, y - 1);
-                AddToCandidate(x - 2, y - 1);
-                AddToCandidate(x + 1, y - 2);
-                AddToCandidate(x - 1, y - 2);
+                AddToCandidate(p, x + 1, y + 2);
+                AddToCandidate(p, x - 1, y + 2);
+                AddToCandidate(p, x + 2, y + 1);
+                AddToCandidate(p, x - 2, y + 1);
+                AddToCandidate(p, x + 2, y - 1);
+                AddToCandidate(p, x - 2, y - 1);
+                AddToCandidate(p, x + 1, y - 2);
+                AddToCandidate(p, x - 1, y - 2);
                 break;
 
             case "Pawn":
                 int yi = p.player == whitePlayer ? 1 : -1;
-                CandidateForPawn(x, y, yi);
+                CandidateForPawn(p, x, y, yi);
                 break;
 
         }
+
+        return candidateBoxes.Count;
     }
 
-    private void CandidateForPawn(int x, int y, int yi)
+    private void CandidateForPawn(Pieces p, int x, int y, int yi)
     {
         if (boardMatrix[x, y + yi] == null)
         {
-            AddToCandidate(x, y + yi);
+            AddToCandidate(p, x, y + yi);
 
             if (yi == 1 && y == 1 && boardMatrix[x, 3] == null)
             {
-                AddToCandidate(x, 3);
+                AddToCandidate(p, x, 3);
             }
             else if (yi == -1 && y == 6 && boardMatrix[x, 4] == null)
             {
-                AddToCandidate(x, 4);
+                AddToCandidate(p, x, 4);
             }
         }
 
         if (x - 1 >= 0 && boardMatrix[x - 1, y + yi] != null && boardMatrix[x - 1, y + yi].player != turn)
         {
-            AddToCandidate(x - 1, y + yi);
+            AddToCandidate(p, x - 1, y + yi);
         }
         if (x + 1 < 8 && boardMatrix[x + 1, y + yi] != null && boardMatrix[x + 1, y + yi].player != turn)
         {
-            AddToCandidate(x + 1, y + yi);
+            AddToCandidate(p, x + 1, y + yi);
         }
 
         // En Passant
@@ -371,11 +359,11 @@ public class Game : MonoBehaviour
         }
     }
 
-    private void AddToCandidate(int x, int y)
+    private void AddToCandidate(Pieces p,int x, int y)
     {
         if (x < 0 || x >= 8 || y < 0 || y >= 8) return;
 
-        if ((boardMatrix[x, y] == null || boardMatrix[x, y].player != turn) && Move.IsMoveSafe(activePiece, x, y))
+        if ((boardMatrix[x, y] == null || boardMatrix[x, y].player != turn) && Move.IsMoveSafe(p, x, y))
         {
             candidateBoxes.Push(new Box(x, y));
         }
@@ -383,13 +371,13 @@ public class Game : MonoBehaviour
 
     
 
-    private void FindInLine(int xi, int yi, Box b)
+    private void FindInLine(Pieces p, int xi, int yi, Box b)
     {
         int x = b.x + xi, y = b.y + yi;
 
         while (x >= 0 && x < 8 && y >= 0 && y < 8)
         {
-            AddToCandidate(x, y);
+            AddToCandidate(p, x, y);
             
             if (boardMatrix[x, y] != null)
             {

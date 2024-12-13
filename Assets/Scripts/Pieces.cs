@@ -30,7 +30,7 @@ public class Pieces : MonoBehaviour
         sr.sprite = Resources.Load<Sprite>("chess_green/" + player.ToLower() + "_" + tag.ToLower());
     }
 
-    public void Move(Box b)
+    public void MoveTo(Box b)
     {
         Game.boardMatrix[box.x, box.y] = null;
         box = b;
@@ -81,10 +81,7 @@ public class Pieces : MonoBehaviour
         {
             if (a[i] >= 0 && a[i] < 8 && b[i] >= 0 && b[i] < 8 && (Game.boardMatrix[a[i], b[i]] == null || Game.boardMatrix[a[i], b[i]].player != player))
             {
-                if(tag != Game.tags[0] || (new Box(a[i], b[i])).PiecesAttackOnBox().Count == 0)
-                {
-                    return true;
-                }
+                return Move.IsMoveSafe(this, a[i], b[i]);
             }
         }
 

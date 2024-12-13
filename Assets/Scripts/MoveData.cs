@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Unity.VisualScripting;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using static UnityEngine.RuleTile.TilingRuleOutput;
 
@@ -29,14 +30,14 @@ public class Move
 
         if (isCastling)
         {
-            piece.Move(to);
+            piece.MoveTo(to);
             if(from.x < to.x)
             {
-                Game.boardMatrix[7, from.y].Move(new Box(to.x - 1, to.y));
+                Game.boardMatrix[7, from.y].MoveTo(new Box(to.x - 1, to.y));
             }
             else
             {
-                Game.boardMatrix[0, from.y].Move(new Box(to.x + 1, to.y));
+                Game.boardMatrix[0, from.y].MoveTo(new Box(to.x + 1, to.y));
             }
 
             int t = piece.player == Game.whitePlayer ? 0 : 1;
@@ -62,8 +63,8 @@ public class Move
 
                 
             }
-
-            piece.Move(to);
+            
+            piece.MoveTo(to);
 
             int t = piece.player == Game.whitePlayer ? 0 : 1;
 
@@ -91,33 +92,62 @@ public class Move
                 }
             }
         }
-        
+
+        Game.Instance.candidateBoxes.Clear();
+        Game.Instance.enPassantCandidate = null;
+
         // if king or rook is moved then the castling is not possible
-        
+
 
 
         Game.turn = (Game.turn == Game.whitePlayer) ? Game.blackPlayer : Game.whitePlayer;
 
 
-        // this logic to chake still mate
+        // logic for mate
         ArrayList ar = Game.turn == Game.whitePlayer ? Game.whitePieces : Game.blackPieces;
+        Pieces k = Game.turn == Game.whitePlayer ? Game.whiteKing : Game.blackKing;
         Game.gameOver = true;
 
-        for (int i = 0; i < ar.Count; i++)
+        if (k.box.PiecesAttackOnBox().Count != 0)
         {
-            Pieces p = (Pieces)ar[i];
-            if (p.CanMove())
+            for(int i = 0; i < ar.Count; i++)
             {
-                Game.gameOver = false;
-                break;
+                Pieces p = (Pieces)ar[i];
+
+                int temp = Game.Instance.FindCandidateBox(p) + (Game.Instance.enPassantCandidate == null ? 0 : 1);
+
+                Game.Instance.candidateBoxes.Clear();
+                Debug.Log(p.tag + " " + temp);
+                
+                if(temp > 0)
+                {
+                    Game.gameOver = false;
+                    break;
+                }
             }
+
+            if (Game.gameOver) Debug.Log("Mate");
+        }
+        else
+        {
+            // this logic to chake still mate
+            for (int i = 0; i < ar.Count; i++)
+            {
+                Pieces p = (Pieces)ar[i];
+                if (p.CanMove())
+                {
+                    Game.gameOver = false;
+                    break;
+                }
+            }
+            if (Game.gameOver) Debug.Log("still mate");
         }
         
     }
 
     public static bool IsMoveSafe(Pieces p, int x, int y)
     {
-        Pieces k = Game.turn == Game.whitePlayer ? Game.whiteKing : Game.blackKing;
+        Pieces k = p.player == Game.whitePlayer ? Game.whiteKing : Game.blackKing;
 
         Pieces temp = Game.boardMatrix[x, y];
         Game.boardMatrix[x, y] = p;
